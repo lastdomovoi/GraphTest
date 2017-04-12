@@ -5,6 +5,7 @@
 #pragma once
 
 #include "ChartDataFile.h"
+#include "afxwin.h"
 
 // COroliaGraphTestDlg dialog
 class COroliaGraphTestDlg : public CDialogEx
@@ -16,9 +17,8 @@ public:
 // Dialog Data
 	enum { IDD = IDD_OROLIAGRAPHTEST_DIALOG };
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
 
 // Implementation
 protected:
@@ -31,7 +31,11 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+
+public:
+	CString m_csDataDesc;
+	CStatic m_StaticChart;
+
 public:
 	afx_msg void OnBnClickedButtonProcessChartFile();
-	CString m_csDataDesc;
 };

@@ -4,7 +4,6 @@
 #include <string>
 
 ChartDataFile::ChartDataFile()
-: m_csDataFile(_T(""))
 {
 }
 
@@ -17,30 +16,33 @@ ChartDataFile::~ChartDataFile()
 // Clear chart data
 void ChartDataFile::ClearData()
 {
-	m_csDataFile.Empty();
 	m_ChartHeader.Clear();
 	m_ChartData.Clear();
 }
 
 
 // Choose data file and load chart data from the file
-BOOL ChartDataFile::ProcessChartFile(LPCTSTR _csFile)
+BOOL ChartDataFile::ProcessChartFile(LPCTSTR _csFile, CStatic& _ChartArea)
 {
 	BOOL ret = FALSE;
 	CStdioFile fileChartData;
 
-	ClearData();
-
 	try
 	{
+		fileChartData.m_pStream = NULL;
+
 		if (!_csFile)
 		{
 			ErrorBox(_T("Chart file name is not set"), _csFile);
 			throw FALSE;
 		}
 
+		ClearData();
+
 		CFileException ex;
-		BOOL bRet = fileChartData.Open(_csFile, CFile::modeRead | CFile::typeText, &ex);
+		BOOL bRet = fileChartData.Open(_csFile, CFile::modeRead
+			| CFile::typeText | CFile::shareDenyWrite
+			| CFile::osSequentialScan, &ex);
 		if (!bRet)
 		{
 			//ex.ReportError(MB_OK | MB_ICONEXCLAMATION);
@@ -54,8 +56,12 @@ BOOL ChartDataFile::ProcessChartFile(LPCTSTR _csFile)
 			throw FALSE;
 		}
 
-		// store successfully parsed file path
-		m_csDataFile = _csFile;
+		bRet = DrawChart(_ChartArea);
+		if (!bRet)
+		{
+			throw FALSE;
+		}
+
 		ret = TRUE;
 	}
 	catch (BOOL ex)
@@ -166,4 +172,89 @@ void ChartDataFile::ErrorBox(LPCTSTR _csMsg, LPCTSTR _csFile, CException* _pEx)
 CString ChartDataFile::GetDescription()
 {
 	return m_ChartHeader.GetOrganization();
+}
+
+
+BOOL ChartDataFile::DrawChart(CStatic& _ChartArea)
+{
+	// Get draw area size
+	CRect rc;
+	_ChartArea.GetClientRect(&rc);
+	const int iAreaWidth = rc.Width();
+	const int iAreaHeight = rc.Height();
+	// Define axis offsets
+	const int iXAxisOffset = 150;
+	const int iYAxisOffset = 100;
+	const int iDashSize = 5;
+	const int iBorder = 15;
+
+	// Count conversion factors
+	const int iDrawWidth = iAreaWidth - (2 * iBorder + iXAxisOffset);
+	const int iDrawHeight = iAreaHeight - (2 * iBorder + iYAxisOffset);
+	const double dblLabelMin = m_ChartData.m_MinLimits.m_dblLabel;
+	const double dblValueMin = m_ChartData.m_MinLimits.m_dblValue;
+	const double dblXFactor = (double)(iDrawWidth) / (m_ChartData.m_MaxLimits.m_dblLabel - dblLabelMin);
+	const double dblYFactor = (double)(iDrawHeight) / (m_ChartData.m_MaxLimits.m_dblValue - dblValueMin);
+
+	//
+	// Draw chart
+	//
+	CClientDC dc(&_ChartArea);
+	CPen pnPenBlack(PS_SOLID, 1, RGB(0, 0, 0));
+	CPen pnPenBlue(PS_SOLID, 1, RGB(0, 0, 0xF0));
+	CPen* pOldPen = dc.SelectObject(&pnPenBlack);
+	dc.FillSolidRect(rc, RGB(0xE0, 0xE0, 0xE0));
+
+	// Draw axis
+	int x_start = iBorder + iXAxisOffset;
+	int y_start = iAreaHeight - (iBorder + iYAxisOffset);
+	dc.MoveTo(x_start - iDashSize, y_start);
+	dc.LineTo(x_start + iDrawWidth, y_start);
+	dc.MoveTo(x_start, y_start + iDashSize);
+	dc.LineTo(x_start, y_start - iDrawHeight);
+
+	// Draw measurements chart
+	dc.SelectObject(pnPenBlue);
+//	dc.MoveTo(x_start, y_start);
+	//for (int i = 0; i < w - x_start - 2; i += 3)
+	//{
+	//	dc.LineTo(x_start + i, y_start - int(h / 3 * (1 - sin((float)i))));
+	//}
+	for (vector<ChartPoint>::iterator iter = m_ChartData.m_ChartMeasures.begin();
+		iter != m_ChartData.m_ChartMeasures.end(); iter++)
+	{
+		ChartPoint pt = *iter;
+		int iX = x_start + static_cast<int>((pt.m_dblLabel - dblLabelMin) * dblXFactor);
+		int iY = y_start - static_cast<int>((pt.m_dblValue - dblValueMin) * dblYFactor);
+
+		if (iter == m_ChartData.m_ChartMeasures.begin())
+		{
+			dc.MoveTo(iX, iY);
+		}
+		else
+		{
+			dc.LineTo(iX, iY);
+		}
+	}
+
+	//int cPoints = 1;
+	//for (int i = 3; i < iAreaWidth - x_start - 2; i += 10)
+	//{
+	//	cPoints++;
+	//}
+	//POINT* pptPoints = new POINT[cPoints];
+	//int nPoint = 0;
+	//pptPoints[nPoint++] = { x_start, y_start };
+	//for (int i = 3; i < iAreaWidth - x_start - 2; i += 10)
+	//{
+	//	pptPoints[nPoint++] = { x_start + i, y_start - int(iAreaHeight / 3 * (1 - sin((float)i))) };
+	//}
+
+	//BOOL bRet = dc.Polyline(pptPoints, cPoints);
+
+	//delete[] pptPoints;
+
+	dc.SelectObject(pOldPen);
+
+	return TRUE;
 }

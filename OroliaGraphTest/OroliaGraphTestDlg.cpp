@@ -61,6 +61,7 @@ void COroliaGraphTestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_STATIC_DATA_DESC, m_csDataDesc);
+	DDX_Control(pDX, IDC_STATIC_CHART, m_StaticChart);
 }
 
 BEGIN_MESSAGE_MAP(COroliaGraphTestDlg, CDialogEx)
@@ -189,10 +190,20 @@ void COroliaGraphTestDlg::OnBnClickedButtonProcessChartFile()
 		return;
 	}
 
-	// Process chosen chart data file
-	BOOL bSuccess = m_ChartDataFile.ProcessChartFile(strChartFilePath);
+	// Set window title to processing chart title
+	SetWindowText(fileDlg.GetFileTitle());
 
-	// Update current chart title
+	// Set wait cursor
+	HCURSOR hCursorWait = LoadCursor(NULL, IDC_WAIT);
+	HCURSOR hCursorOrg = SetCursor(hCursorWait);
+
+	// Process chosen chart data file (read data and draw chart)
+	BOOL bSuccess = m_ChartDataFile.ProcessChartFile(strChartFilePath, m_StaticChart);
+
+	// Restore cursor
+	SetCursor(hCursorOrg);
+
+	// Set window title to processed chart title or clear on error
 	SetWindowText(bSuccess ? fileDlg.GetFileTitle() : _T(""));
 
 	if (bSuccess)
