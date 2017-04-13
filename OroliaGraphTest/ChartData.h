@@ -15,14 +15,18 @@ public:
 	CChartData();
 	~CChartData();
 	void Clear();
-	BOOL ParseDataLine(CString& _csStr);
+	BOOL ParseDataLineAndCollectLimits(CString& _csStr);
+	BOOL ParseDataLine(CString& _csStr, ChartPoint& _Point);
+
 public:
 	// Minimum values of data fields
 	ChartPoint m_MinLimits;
 	// Maximum values of data fields
 	ChartPoint m_MaxLimits;
-	// Chart data measures container
+	//// Chart data measures container
 	vector<ChartPoint> m_ChartMeasures;
+	// Store measurement data in memory
+	BOOL m_bStoreDataInMemory;
 private:
 	// If limits are already present
 	BOOL bLimitsDefined;

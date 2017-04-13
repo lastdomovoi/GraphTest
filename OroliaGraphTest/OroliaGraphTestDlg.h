@@ -6,6 +6,9 @@
 
 #include "ChartDataFile.h"
 #include "afxwin.h"
+#include "atltypes.h"
+
+DWORD WINAPI ProcessChartThread(LPVOID _lpParam);
 
 // COroliaGraphTestDlg dialog
 class COroliaGraphTestDlg : public CDialogEx
@@ -23,7 +26,6 @@ protected:
 // Implementation
 protected:
 	HICON m_hIcon;
-	ChartDataFile m_ChartDataFile;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
@@ -35,7 +37,40 @@ protected:
 public:
 	CString m_csDataDesc;
 	CStatic m_StaticChart;
+	CStatic m_StaticDesc;
+	BOOL m_bLowMemoryUsage;
 
 public:
-	afx_msg void OnBnClickedButtonProcessChartFile();
+	afx_msg void OnBnClickedButtonLoadFile();
+	afx_msg void OnBnClickedCheckLowMemUsage();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnClose();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
+	afx_msg void OnDestroy();
+	LRESULT OnSetFileTitle(WPARAM _wParam, LPARAM _lParam);
+	LRESULT OnSetDescription(WPARAM _wParam, LPARAM _lParam);
+	LRESULT OnUpdateChart(WPARAM _wParam, LPARAM _lParam);
+	CButton m_CheckLowMemUsage;
+	CButton m_ButtonLoadChart;
+	void UpdateChart();
+	UINT_PTR m_nThreadTimer;
+	BOOL PrepareChartDC();
+private:
+	HANDLE m_hThread;
+	// Min window size
+	CSize m_SizeMin;
+	CRect m_rcCurrent;
+public:
+	static CDC m_dcMem;
+	CBitmap m_bmpBitmap;
+	static CDC& GetMemDC();
+private:
+	CBitmap* m_pbmpOrg;
+public:
+	CRect m_rcScreen;
+	void RefreshChart();
+	//UINT_PTR m_nChartTimer;
+	HCURSOR m_hCursorOrg;
 };
+

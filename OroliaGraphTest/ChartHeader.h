@@ -1,4 +1,17 @@
 #pragma once
+
+enum HeaderId
+{
+	OrgAndApp,
+	MeasType,
+	StartTime,
+	MeasTimeAndSingle,
+	InputAAndFilter,
+	InputBAndCommon,
+	ExtArmAndRefOsc,
+	HoldOffAndStats,
+};
+
 class CChartHeader
 {
 public:
@@ -7,23 +20,21 @@ public:
 	// Clear all data
 	void Clear();
 	// Parsing chart file header
-	BOOL ParseHeaderLine(CString& _csStr, OUT BOOL& _bHeaderLine);
+	BOOL ParseHeaderLine(CString& _csStr);
 
 private:
 	// Header string prefix ("#")
 	const CString m_csHeaderPrefix;
+	HeaderId m_CurHeaderId;
 	size_t m_sizeHeaderPrefix;
 	// Organiztion name
 	CString m_csOrganization;
 	// Application name
 	CString m_csApplication;
-	// Major application version
-	UINT m_uiAppVerMajor;
-	// Minor application version
-	UINT m_uiAppVerMinor;
+	// Measurement
 	CString m_csMeasurementType;
 	// Start time of measurement
-	time_t m_tStartTime;
+	CString m_csStartTime;
 	// Measuring time
 	CString m_csMeasuringTime;
 	// Single
@@ -44,7 +55,13 @@ private:
 	CString m_csHoldOff;
 	// Statistics
 	CString m_csStatistics;
+	// Unknown
+	CString m_csUnknown;
 public:
-	CString GetOrganization();
+	CString GetDescription();
+	// Check if header is already filled with correct data
+	BOOL IsFilled();
+private:
+	bool m_bFilled;
 };
 

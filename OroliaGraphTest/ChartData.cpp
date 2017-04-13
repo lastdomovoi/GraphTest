@@ -4,6 +4,7 @@
 
 CChartData::CChartData()
 : bLimitsDefined(FALSE)
+, m_bStoreDataInMemory(FALSE)
 {
 }
 
@@ -20,7 +21,7 @@ void CChartData::Clear()
 }
 
 
-BOOL CChartData::ParseDataLine(CString& _csStr)
+BOOL CChartData::ParseDataLine(CString& _csStr, ChartPoint& _Point)
 {
 	if (_csStr.IsEmpty())
 	{
@@ -36,21 +37,54 @@ BOOL CChartData::ParseDataLine(CString& _csStr)
 		return FALSE;
 	}
 
-	m_ChartMeasures.push_back(ChartPoint({ dblLabel, dblValue }));
+	_Point = { dblLabel, dblValue };
+
+	if (m_bStoreDataInMemory)
+	{
+		m_ChartMeasures.push_back(_Point);
+	}
+
+	return TRUE;
+}
+
+
+BOOL CChartData::ParseDataLineAndCollectLimits(CString& _csStr)
+{
+	ChartPoint point;
+	BOOL bRet = ParseDataLine(_csStr, point);
+	if (!bRet)
+	{
+		return FALSE;
+	}
 
 	// update limits
 	if (!bLimitsDefined)
 	{
-		m_MinLimits = { dblLabel, dblValue };
-		m_MaxLimits = { dblLabel, dblValue };
+		m_MinLimits = point;
+		m_MaxLimits = point;
 		bLimitsDefined = TRUE;
 	}
 	else
 	{
-		if (dblLabel < m_MinLimits.m_dblLabel) m_MinLimits.m_dblLabel = dblLabel;
-		if (dblLabel > m_MaxLimits.m_dblLabel) m_MaxLimits.m_dblLabel = dblLabel;
-		if (dblValue < m_MinLimits.m_dblValue) m_MinLimits.m_dblValue = dblValue;
-		if (dblValue > m_MaxLimits.m_dblValue) m_MaxLimits.m_dblValue = dblValue;
+		// Label limits updating may be ommited since all data lines are sorted by label.
+		// But let's keep it just to be sure that we have real label limits for possible unsorted files.
+		if (point.m_dblLabel < m_MinLimits.m_dblLabel)
+		{
+			m_MinLimits.m_dblLabel = point.m_dblLabel;
+		}
+		if (point.m_dblLabel > m_MaxLimits.m_dblLabel)
+		{
+			m_MaxLimits.m_dblLabel = point.m_dblLabel;
+		}
+
+		if (point.m_dblValue < m_MinLimits.m_dblValue)
+		{
+			m_MinLimits.m_dblValue = point.m_dblValue;
+		}
+		if (point.m_dblValue > m_MaxLimits.m_dblValue)
+		{
+			m_MaxLimits.m_dblValue = point.m_dblValue;
+		}
 	}
 
 	return TRUE;
