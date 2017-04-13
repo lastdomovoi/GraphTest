@@ -58,7 +58,7 @@ BOOL CChartHeader::ParseHeaderLine(CString& _csStr)
 		BOOL bHeaderLine = (0 == m_csHeaderPrefix.Compare(csStr));
 		if (!bHeaderLine)
 		{
-			csErr.Format(_T("Not a header line: %s"), _csStr);
+			csErr.Format(_T("Not a header line: %s"), (LPCTSTR)_csStr);
 			throw csErr;
 		}
 
@@ -84,7 +84,7 @@ BOOL CChartHeader::ParseHeaderLine(CString& _csStr)
 			iPos = csStr.Find(_T(","));
 			if (-1 == iPos)
 			{
-				csErr.Format(_T("Invalid header (organization/application string invalid: %s)"), _csStr);
+				csErr.Format(_T("Invalid header (organization/application string invalid: %s)"), (LPCTSTR)_csStr);
 				throw csErr;
 			}
 			else
@@ -103,7 +103,7 @@ BOOL CChartHeader::ParseHeaderLine(CString& _csStr)
 			iPos = csStr.Find(_T("Single"));
 			if (-1 == iPos)
 			{
-				csErr.Format(_T("Invalid header (Measuring time/Single string invalid: %s)"), _csStr);
+				csErr.Format(_T("Invalid header (Measuring time/Single string invalid: %s)"), (LPCTSTR)_csStr);
 				throw csErr;
 			}
 			else
@@ -116,7 +116,7 @@ BOOL CChartHeader::ParseHeaderLine(CString& _csStr)
 			iPos = csStr.Find(_T("Filter"));
 			if (-1 == iPos)
 			{
-				csErr.Format(_T("Invalid header (Input A/Filter string invalid: %s)"), _csStr);
+				csErr.Format(_T("Invalid header (Input A/Filter string invalid: %s)"), (LPCTSTR)_csStr);
 				throw csErr;
 			}
 			else
@@ -129,7 +129,7 @@ BOOL CChartHeader::ParseHeaderLine(CString& _csStr)
 			iPos = csStr.Find(_T("Common"));
 			if (-1 == iPos)
 			{
-				csErr.Format(_T("Invalid header (Input B/Common string invalid: %s)"), _csStr);
+				csErr.Format(_T("Invalid header (Input B/Common string invalid: %s)"), (LPCTSTR)_csStr);
 				throw csErr;
 			}
 			else
@@ -142,7 +142,7 @@ BOOL CChartHeader::ParseHeaderLine(CString& _csStr)
 			iPos = csStr.Find(_T("Ref.osc"));
 			if (-1 == iPos)
 			{
-				csErr.Format(_T("Invalid header (Ext.arm/Ref.osc string invalid: %s)"), _csStr);
+				csErr.Format(_T("Invalid header (Ext.arm/Ref.osc string invalid: %s)"), (LPCTSTR)_csStr);
 				throw csErr;
 			}
 			else
@@ -155,7 +155,7 @@ BOOL CChartHeader::ParseHeaderLine(CString& _csStr)
 			iPos = csStr.Find(_T("Statistics"));
 			if (-1 == iPos)
 			{
-				csErr.Format(_T("Invalid header (Hold off/Statistics string invalid: %s)"), _csStr);
+				csErr.Format(_T("Invalid header (Hold off/Statistics string invalid: %s)"), (LPCTSTR)_csStr);
 				throw csErr;
 			}
 			else
@@ -193,21 +193,21 @@ CString CChartHeader::GetDescription()
 {
 	CString csStr;
 	csStr.Format(_T("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s"), 
-		m_csOrganization,
-		m_csApplication,
-		m_csMeasurementType,
-		m_csStartTime,
-		m_csMeasuringTime,
-		m_csSingle,
-		m_csInputA,
-		m_csFilter,
-		m_csInputB,
-		m_csCommon,
-		m_csExtArm,
-		m_csRefOsc,
-		m_csHoldOff,
-		m_csStatistics,
-		m_csUnknown
+		(LPCTSTR)m_csOrganization,
+		(LPCTSTR)m_csApplication,
+		(LPCTSTR)m_csMeasurementType,
+		(LPCTSTR)m_csStartTime,
+		(LPCTSTR)m_csMeasuringTime,
+		(LPCTSTR)m_csSingle,
+		(LPCTSTR)m_csInputA,
+		(LPCTSTR)m_csFilter,
+		(LPCTSTR)m_csInputB,
+		(LPCTSTR)m_csCommon,
+		(LPCTSTR)m_csExtArm,
+		(LPCTSTR)m_csRefOsc,
+		(LPCTSTR)m_csHoldOff,
+		(LPCTSTR)m_csStatistics,
+		(LPCTSTR)m_csUnknown
 		);
 
 	return csStr;

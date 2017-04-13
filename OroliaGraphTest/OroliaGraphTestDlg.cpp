@@ -190,6 +190,9 @@ void COroliaGraphTestDlg::OnPaint()
 
 		BOOL bRet = dc.StretchBlt(0, 0, rc.Width(), rc.Height(), &m_dcMem,
 			0, 0, m_rcScreen.Width(), m_rcScreen.Height(), SRCCOPY);
+		if (!bRet)
+		{
+		}
 	}
 }
 
@@ -304,7 +307,7 @@ void COroliaGraphTestDlg::OnClose()
 
 	if (m_hThread)
 	{
-		DWORD dwWait = ::WaitForSingleObject(m_hThread, 3 * 1000);
+		DWORD dwWait = ::WaitForSingleObject(m_hThread, 10 * 1000);
 		switch (dwWait)
 		{
 		case WAIT_OBJECT_0:
@@ -360,6 +363,8 @@ LRESULT COroliaGraphTestDlg::OnSetFileTitle(WPARAM _wParam, LPARAM _lParam)
 {
 	CString* pcsTitle = (CString*)_lParam;
 	SetWindowText(pcsTitle ? *pcsTitle : _T(""));
+	if (pcsTitle) delete pcsTitle, pcsTitle = NULL;
+
 
 	m_dcMem.FillSolidRect(m_rcScreen, RGB(0xE0, 0xE0, 0xE0));
 	
@@ -371,6 +376,8 @@ LRESULT COroliaGraphTestDlg::OnSetDescription(WPARAM _wParam, LPARAM _lParam)
 {
 	CString* pcsDesc = (CString*)_lParam;
 	m_csDataDesc = pcsDesc ? *pcsDesc : _T("");
+	if (pcsDesc) delete pcsDesc, pcsDesc = NULL;
+
 	UpdateData(FALSE);
 
 	// Set wait cursor
@@ -519,6 +526,11 @@ DWORD WINAPI ProcessChartThread(LPVOID _lpParam)
 		}
 	}
 
+	if (pChartDataFile)
+	{
+		delete pChartDataFile, pChartDataFile = NULL;
+	}
+
 	return ret;
 }
 
@@ -541,18 +553,7 @@ BOOL COroliaGraphTestDlg::PrepareChartDC()
 		m_bmpBitmap.CreateCompatibleBitmap(&dc, m_rcScreen.Width(), m_rcScreen.Height());
 		m_pbmpOrg = m_dcMem.SelectObject(&m_bmpBitmap);
 
-		//CBrush brushLtGray;
-		//brushLtGray.CreateStockObject(LTGRAY_BRUSH);
-		//CBrush* pOrgBrush = m_dcMem.SelectObject(&brushLtGray);
-		//m_dcMem.PatBlt(0, 0, iScreenWidth, iScreenHeight, PATCOPY);
-		//m_dcMem.SelectObject(pOrgBrush);
-		//brushLtGray.DeleteObject();
 		m_dcMem.FillSolidRect(m_rcScreen, RGB(0xE0, 0xE0, 0xE0));
-
-		//if (pOrgBrush)
-		//{
-		//	m_dcMem.SelectObject(pOrgBrush);
-		//}
 
 		ret = TRUE;
 	}
@@ -582,14 +583,9 @@ void COroliaGraphTestDlg::RefreshChart()
 {
 	if (m_StaticChart.m_hWnd)
 	{
-		//CPaintDC dc(&m_StaticChart);
 		CRect rc;
 		m_StaticChart.GetClientRect(&rc);
 
-		//BOOL bRet = dc.StretchBlt(0, 0, rc.Width(), rc.Height(), &m_dcMem,
-		//	0, 0, m_rcScreen.Width(), m_rcScreen.Height(), SRCCOPY);
-
-		//	m_StaticChart.Invalidate(TRUE);
 		InvalidateRect(&rc, FALSE);
 		UpdateWindow();
 	}

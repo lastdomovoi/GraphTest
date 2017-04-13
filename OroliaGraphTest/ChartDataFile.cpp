@@ -186,7 +186,7 @@ CString ChartDataFile::GetDescription()
 BOOL ChartDataFile::DrawChart(CStdioFile& _FileData, CDC& _dcTarget)
 {
 	BOOL ret = FALSE;
-	CPen* pOldPen = NULL;
+	CPen* ppnOrg = NULL;
 	CPen pnPenBlack(PS_SOLID, 1, RGB(0, 0, 0));
 	CPen pnPenBlue(PS_SOLID, 1, RGB(0, 0, 0xF0));
 
@@ -214,8 +214,7 @@ BOOL ChartDataFile::DrawChart(CStdioFile& _FileData, CDC& _dcTarget)
 		//
 		// Draw chart
 		//
-		pOldPen = _dcTarget.SelectObject(&pnPenBlack);
-		_dcTarget.FillSolidRect(rc, RGB(0xE0, 0xE0, 0xE0));
+		ppnOrg = _dcTarget.SelectObject(&pnPenBlack);
 
 		// Draw axis
 		int iXBase = iBorder + iXAxisOffset;
@@ -243,7 +242,7 @@ BOOL ChartDataFile::DrawChart(CStdioFile& _FileData, CDC& _dcTarget)
 		//
 		// Draw measurements chart
 		//
-		_dcTarget.SelectObject(pnPenBlue);
+		_dcTarget.SelectObject(&pnPenBlue);
 
 		ChartPoint point;
 		BOOL bFirstPoint = TRUE;
@@ -255,18 +254,6 @@ BOOL ChartDataFile::DrawChart(CStdioFile& _FileData, CDC& _dcTarget)
 			{
 				point = *iter;
 
-				//int iX = iXBase + static_cast<int>((point.m_dblLabel - dblLabelMin) * dblXFactor);
-				//int iY = iYBase - static_cast<int>((point.m_dblValue - dblValueMin) * dblYFactor);
-
-				//if (bFirstPoint)
-				//{
-				//	dc.MoveTo(iX, iY);
-				//	bFirstPoint = FALSE;
-				//}
-				//else
-				//{
-				//	dc.LineTo(iX, iY);
-				//}
 				DrawPoint(_dcTarget, point, bFirstPoint, iXBase, iYBase, dblLabelMin,
 					dblValueMin, dblXFactor, dblYFactor);
 			}
@@ -300,9 +287,9 @@ BOOL ChartDataFile::DrawChart(CStdioFile& _FileData, CDC& _dcTarget)
 		ret = bRet;
 	}
 
-	if (pOldPen)
+	if (ppnOrg)
 	{
-		_dcTarget.SelectObject(pOldPen);
+		_dcTarget.SelectObject(ppnOrg);
 	}
 	pnPenBlack.DeleteObject();
 	pnPenBlue.DeleteObject();
