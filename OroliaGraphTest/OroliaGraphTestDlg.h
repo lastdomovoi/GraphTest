@@ -42,7 +42,7 @@ public:
 
 public:
 	afx_msg void OnBnClickedButtonLoadFile();
-	afx_msg void OnBnClickedCheckLowMemUsage();
+	afx_msg void OnBnClickedCheckLessMemUsage();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnClose();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
@@ -51,7 +51,7 @@ public:
 	LRESULT OnSetFileTitle(WPARAM _wParam, LPARAM _lParam);
 	LRESULT OnSetDescription(WPARAM _wParam, LPARAM _lParam);
 	LRESULT OnUpdateChart(WPARAM _wParam, LPARAM _lParam);
-	CButton m_CheckLowMemUsage;
+	CButton m_CheckLessMemUsage;
 	CButton m_ButtonLoadChart;
 	void UpdateChart();
 	UINT_PTR m_nThreadTimer;
@@ -63,6 +63,8 @@ private:
 	CRect m_rcCurrent;
 public:
 	static CDC m_dcMem;
+	static CMutex* m_pmxMemDC;
+	static CSingleLock* m_pslMemDC;
 	CBitmap m_bmpBitmap;
 	static CDC& GetMemDC();
 private:

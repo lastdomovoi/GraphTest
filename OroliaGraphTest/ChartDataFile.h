@@ -25,7 +25,7 @@ private:
 	BOOL ParseChartFile(CStdioFile& _FileData, BOOL _bUseMemory);
 	// Show exception error
 	void ErrorBox(LPCTSTR _strMsg, CException* _pEx = NULL);
-	void ChartDataFile::DrawPoint(
+	void DrawPoint(
 		CDC& _dc,
 		ChartPoint& _Point,
 		IN OUT BOOL& _bFirstPoint,

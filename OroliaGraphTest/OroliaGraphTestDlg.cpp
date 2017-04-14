@@ -50,6 +50,8 @@ END_MESSAGE_MAP()
 
 
 CDC COroliaGraphTestDlg::m_dcMem;
+CMutex* COroliaGraphTestDlg::m_pmxMemDC = NULL;
+CSingleLock* COroliaGraphTestDlg::m_pslMemDC = NULL;
 
 
 COroliaGraphTestDlg::COroliaGraphTestDlg(CWnd* pParent /*=NULL*/)
@@ -64,6 +66,12 @@ COroliaGraphTestDlg::COroliaGraphTestDlg(CWnd* pParent /*=NULL*/)
 	, m_hCursorOrg(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	m_pmxMemDC = new CMutex(FALSE);
+	if (m_pmxMemDC)
+	{
+		m_pslMemDC = new CSingleLock(m_pmxMemDC);
+	}
 }
 
 void COroliaGraphTestDlg::DoDataExchange(CDataExchange* pDX)
@@ -74,7 +82,7 @@ void COroliaGraphTestDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_DATA_DESC, m_StaticDesc);
 	DDX_Check(pDX, IDC_CHECK_LOW_MEM_USAGE, m_bLowMemoryUsage);
 	DDX_Control(pDX, IDC_BUTTON_LOAD_CHART, m_ButtonLoadChart);
-	DDX_Control(pDX, IDC_CHECK_LOW_MEM_USAGE, m_CheckLowMemUsage);
+	DDX_Control(pDX, IDC_CHECK_LOW_MEM_USAGE, m_CheckLessMemUsage);
 }
 
 BEGIN_MESSAGE_MAP(COroliaGraphTestDlg, CDialogEx)
@@ -83,7 +91,7 @@ BEGIN_MESSAGE_MAP(COroliaGraphTestDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_LOAD_DATA, &COroliaGraphTestDlg::OnBnClickedButtonLoadFile)
 	//ON_STN_CLICKED(IDC_STATIC_DATA_DESC, &COroliaGraphTestDlg::OnStnClickedStaticDataDesc)
-	ON_BN_CLICKED(IDC_CHECK_LOW_MEM_USAGE, &COroliaGraphTestDlg::OnBnClickedCheckLowMemUsage)
+	ON_BN_CLICKED(IDC_CHECK_LOW_MEM_USAGE, &COroliaGraphTestDlg::OnBnClickedCheckLessMemUsage)
 	ON_WM_SIZE()
 	ON_WM_CLOSE()
 	ON_WM_TIMER()
@@ -184,14 +192,19 @@ void COroliaGraphTestDlg::OnPaint()
 	{
 		CDialogEx::OnPaint();
 
-		CPaintDC dc(&m_StaticChart);
-		CRect rc;
-		m_StaticChart.GetClientRect(&rc);
-
-		BOOL bRet = dc.StretchBlt(0, 0, rc.Width(), rc.Height(), &m_dcMem,
-			0, 0, m_rcScreen.Width(), m_rcScreen.Height(), SRCCOPY);
-		if (!bRet)
+		if (m_pslMemDC && m_pslMemDC->Lock(100))
 		{
+			CPaintDC dc(&m_StaticChart);
+			CRect rc;
+			m_StaticChart.GetClientRect(&rc);
+
+		    BOOL bRet = dc.StretchBlt(0, 0, rc.Width(), rc.Height(), &m_dcMem,
+			    0, 0, m_rcScreen.Width(), m_rcScreen.Height(), SRCCOPY);
+    		if (!bRet)
+	    	{
+		    }
+
+			m_pslMemDC->Unlock();
 		}
 	}
 }
@@ -228,7 +241,7 @@ void COroliaGraphTestDlg::OnBnClickedButtonLoadFile()
 }
 
 
-void COroliaGraphTestDlg::OnBnClickedCheckLowMemUsage()
+void COroliaGraphTestDlg::OnBnClickedCheckLessMemUsage()
 {
 	UpdateData(TRUE);
 }
@@ -266,15 +279,15 @@ void COroliaGraphTestDlg::OnSize(UINT nType, int cx, int cy)
 		m_StaticDesc.MoveWindow(rc);
 	}
 
-	if (m_CheckLowMemUsage.m_hWnd)
+	if (m_CheckLessMemUsage.m_hWnd)
 	{
-		m_CheckLowMemUsage.GetWindowRect(rc);
+		m_CheckLessMemUsage.GetWindowRect(rc);
 		rc.left += lDX;
 		rc.right += lDX;
 		rc.top += lDY;
 		rc.bottom += lDY;
 		ScreenToClient(rc);
-		m_CheckLowMemUsage.MoveWindow(rc);
+		m_CheckLessMemUsage.MoveWindow(rc);
 	}
 
 	if (m_ButtonLoadChart.m_hWnd)
@@ -289,13 +302,6 @@ void COroliaGraphTestDlg::OnSize(UINT nType, int cx, int cy)
 	}
 
 	GetClientRect(&m_rcCurrent);
-
-	//if (m_dcMem.GetSafeHdc())
-	//{
-	//	m_dcMem.DeleteDC();
-	//}
-
-	//RefreshChart();
 }
 
 
@@ -361,12 +367,15 @@ void COroliaGraphTestDlg::OnTimer(UINT_PTR nIDEvent)
 
 LRESULT COroliaGraphTestDlg::OnSetFileTitle(WPARAM _wParam, LPARAM _lParam)
 {
-	CString* pcsTitle = (CString*)_lParam;
+	CString* pcsTitle = reinterpret_cast<CString*>(_lParam);
 	SetWindowText(pcsTitle ? *pcsTitle : _T(""));
 	if (pcsTitle) delete pcsTitle, pcsTitle = NULL;
 
-
-	m_dcMem.FillSolidRect(m_rcScreen, RGB(0xE0, 0xE0, 0xE0));
+	if (m_pslMemDC && m_pslMemDC->Lock(100))
+	{
+		m_dcMem.FillSolidRect(m_rcScreen, RGB(0xE0, 0xE0, 0xE0));
+		m_pslMemDC->Unlock();
+	}
 	
 	return LRESULT();
 }
@@ -374,7 +383,7 @@ LRESULT COroliaGraphTestDlg::OnSetFileTitle(WPARAM _wParam, LPARAM _lParam)
 
 LRESULT COroliaGraphTestDlg::OnSetDescription(WPARAM _wParam, LPARAM _lParam)
 {
-	CString* pcsDesc = (CString*)_lParam;
+	CString* pcsDesc = reinterpret_cast<CString*>(_lParam);
 	m_csDataDesc = pcsDesc ? *pcsDesc : _T("");
 	if (pcsDesc) delete pcsDesc, pcsDesc = NULL;
 
@@ -426,8 +435,11 @@ void COroliaGraphTestDlg::OnDestroy()
 	if (m_pbmpOrg)
 	{
 		m_dcMem.SelectObject(m_pbmpOrg);
+		m_dcMem.DeleteDC();
 	}
-	m_dcMem.DeleteDC();
+
+	if (m_pslMemDC) delete m_pslMemDC, m_pslMemDC = NULL;
+	if (m_pmxMemDC) delete m_pmxMemDC, m_pmxMemDC = NULL;
 }
 
 
@@ -445,14 +457,14 @@ DWORD WINAPI ProcessChartThread(LPVOID _lpParam)
 
 	try
 	{
-		BOOL bLowMemUsage = FALSE;
+		BOOL bLessMemUsage = FALSE;
 		COroliaGraphTestDlg* pDlg = static_cast<COroliaGraphTestDlg*>(CWnd::FromHandle(hDlgWnd));
 		if (pDlg)
 		{
-			CButton* pCheckLowMemUsage = static_cast<CButton*>(pDlg->GetDlgItem(IDC_CHECK_LOW_MEM_USAGE));
-			if (pCheckLowMemUsage)
+			CButton* pCheckLessMemUsage = static_cast<CButton*>(pDlg->GetDlgItem(IDC_CHECK_LOW_MEM_USAGE));
+			if (pCheckLessMemUsage)
 			{
-				bLowMemUsage = BST_CHECKED == pCheckLowMemUsage->GetCheck();
+				bLessMemUsage = BST_CHECKED == pCheckLessMemUsage->GetCheck();
 			}
 		}
 
@@ -491,11 +503,20 @@ DWORD WINAPI ProcessChartThread(LPVOID _lpParam)
 		CString* pcsTitle = new CString(fileDlg.GetFileTitle());
 		if (pcsTitle)
 		{
-			PostMessage(hDlgWnd, WM_SET_FILE_TITLE, NULL, (LPARAM)pcsTitle);
+			SendMessage(hDlgWnd, WM_SET_FILE_TITLE, NULL, reinterpret_cast<LPARAM>(pcsTitle));
+		}
+
+		if (!pDlg->m_pslMemDC || !pDlg->m_pslMemDC->Lock(1000))
+		{
+			ret = (DWORD)-1;
+			throw _T("Failed to lock DC");
 		}
 
 		// Process chosen chart data file (read data and draw chart)
-		BOOL bRet = pChartDataFile->ProcessChartFile(strChartFilePath, !bLowMemUsage, pDlg->GetMemDC());
+		BOOL bRet = pChartDataFile->ProcessChartFile(strChartFilePath, !bLessMemUsage, pDlg->GetMemDC());
+		
+		pDlg->m_pslMemDC->Unlock();
+		
 		if (!bRet)
 		{
 			throw (DWORD)-1;
@@ -522,7 +543,7 @@ DWORD WINAPI ProcessChartThread(LPVOID _lpParam)
 		CString* pcsTitle = new CString(_T(""));
 		if (pcsTitle)
 		{
-			PostMessage(hDlgWnd, WM_SET_FILE_TITLE, NULL, (LPARAM)pcsTitle);
+			PostMessage(hDlgWnd, WM_SET_FILE_TITLE, NULL, reinterpret_cast<LPARAM>(pcsTitle));
 		}
 	}
 

@@ -40,6 +40,7 @@ BOOL ChartDataFile::ProcessChartFile(LPCTSTR _csFile, BOOL _bUseMemory, CDC& _dc
 			throw FALSE;
 		}
 
+
 		ClearData();
 
 		CFileException ex;
@@ -214,6 +215,7 @@ BOOL ChartDataFile::DrawChart(CStdioFile& _FileData, CDC& _dcTarget)
 		//
 		// Draw chart
 		//
+		_dcTarget.FillSolidRect(0, 0, iAreaWidth, iAreaHeight, RGB(0xE0, 0xE0, 0xE0));
 		ppnOrg = _dcTarget.SelectObject(&pnPenBlack);
 
 		// Draw axis
